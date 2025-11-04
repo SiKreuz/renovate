@@ -92,6 +92,7 @@ let optionInherits: Set<string>;
 let optionRegexOrGlob: Set<string>;
 let optionAllowsNegativeIntegers: Set<string>;
 let optionSupportsTemplating: Set<string>;
+let optionsByName: Map<string, RenovateOptions>;
 
 const managerList: readonly string[] = AllManagersListLiteral;
 
@@ -179,9 +180,15 @@ function initOptions(): void {
   optionGlobals = new Set();
   optionAllowsNegativeIntegers = new Set();
   optionSupportsTemplating = new Set();
+  optionsByName = new Map();
 
   for (const option of options) {
     optionTypes[option.name] = option.type;
+
+    // `options` may define the same name more than once, and we've always used the first
+    if (!optionsByName.has(option.name)) {
+      optionsByName.set(option.name, option);
+    }
 
     const parents = getAllowedParents(option);
     if (parents) {
@@ -1150,6 +1157,8 @@ export async function validateConfig(
             }
           }
         }
+
+        validateAllowedValues(key, val, currentPath, errors);
       }
 
       function sortAll(a: ValidationMessage, b: ValidationMessage): number {
@@ -1455,6 +1464,8 @@ async function validateGlobalConfig(
       }
     }
   }
+
+  validateAllowedValues(key, val, currentPath, errors);
 }
 
 function getPossibleConfigFileNames({
@@ -1470,4 +1481,61 @@ function getPossibleConfigFileNames({
   }
 
   return filenames;
+}
+
+function describeAllowedValues(option: RenovateOptions): string {
+  const allowedValues = coerceArray(option.allowedValues);
+  // for options with a lot of values (i.e. `enabledManagers`), listing them all makes for an unreadable message
+  if (allowedValues.length > 10) {
+    const page = option.globalOnly
+      ? 'self-hosted-configuration'
+      : 'configuration-options';
+    return `allowedValues, which are listed at ${GlobalConfig.get('productLinks').documentation}${page}/#${option.name.toLowerCase()}`;
+  }
+  return `allowedValues: ${JSON.stringify(allowedValues)}`;
+}
+
+function validateAllowedValues(
+  key: string,
+  val: unknown,
+  currentPath: string | undefined,
+  errors: ValidationMessage[],
+): void {
+  const option = optionsByName.get(key);
+  if (!option) {
+    return;
+  }
+
+  const allowedValues = option.allowedValues;
+  if (allowedValues?.length) {
+    if (val === null && option.default === null) {
+      // do nothing
+    } else if (isArray(val, isString)) {
+      const invalidOptions = val.filter((v) => !allowedValues.includes(v));
+      if (invalidOptions.length) {
+        errors.push({
+          topic: ConfigValidationTopic.Error,
+          message: `Invalid ${currentPath}: ${option.name} had invalid values \`${JSON.stringify(invalidOptions)}\` which are not part of the ${describeAllowedValues(option)}`,
+        });
+      }
+    } else if (isString(val)) {
+      if (key === 'versioning') {
+        if (!allowedValues.includes(val) && !val.startsWith('regex:')) {
+          errors.push({
+            topic: ConfigValidationTopic.Error,
+            message: `Invalid ${currentPath}: ${option.name} had invalid value \`${JSON.stringify(val)}\`. ${option.name} can only be a known versioning scheme, or be a string starting with \`regex:\` for custom regular expression versioning`,
+          });
+        }
+      } else if (
+        !allowedValues.includes(val) &&
+        // a templated value can't be checked until it's been rendered
+        !(option.supportsTemplating && val.includes('{{'))
+      ) {
+        errors.push({
+          topic: ConfigValidationTopic.Error,
+          message: `Invalid ${currentPath}: ${option.name} had a value \`${JSON.stringify(val)}\` which was not part of the ${describeAllowedValues(option)}`,
+        });
+      }
+    }
+  }
 }
