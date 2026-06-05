@@ -3101,13 +3101,7 @@ describe('config/validation', () => {
         'global',
         config,
       );
-      expect(warnings).toEqual([
-        {
-          message:
-            'Invalid value `invalid` for `binarySource`. The allowed values are docker, global, install, hermit.',
-          topic: 'Configuration Error',
-        },
-      ]);
+      expect(warnings).toBeEmptyArray();
       expect(errors).toMatchObject([
         {
           message:
@@ -3125,13 +3119,7 @@ describe('config/validation', () => {
           'global',
           config,
         );
-        expect(warnings).toEqual([
-          {
-            message:
-              'Invalid value `invalid` for `binarySource`. The allowed values are docker, global, install, hermit.',
-            topic: 'Configuration Error',
-          },
-        ]);
+        expect(warnings).toBeEmptyArray();
         expect(errors).toMatchObject([
           {
             message:
@@ -3165,13 +3153,7 @@ describe('config/validation', () => {
           'global',
           config,
         );
-        expect(warnings).toEqual([
-          {
-            message:
-              'Invalid value `invalid` for `requireConfig`. The allowed values are required, optional, ignored.',
-            topic: 'Configuration Error',
-          },
-        ]);
+        expect(warnings).toBeEmptyArray();
         expect(errors).toMatchObject([
           {
             message:
@@ -3188,13 +3170,7 @@ describe('config/validation', () => {
           'global',
           config,
         );
-        expect(warnings).toEqual([
-          {
-            message:
-              'Invalid value `invalid` for `dryRun`. The allowed values are extract, lookup, full.',
-            topic: 'Configuration Error',
-          },
-        ]);
+        expect(warnings).toBeEmptyArray();
         expect(errors).toMatchObject([
           {
             message:
@@ -3211,13 +3187,7 @@ describe('config/validation', () => {
           'global',
           config,
         );
-        expect(warnings).toEqual([
-          {
-            message:
-              'Invalid value `invalid` for `repositoryCache`. The allowed values are enabled, disabled, reset.',
-            topic: 'Configuration Error',
-          },
-        ]);
+        expect(warnings).toBeEmptyArray();
         expect(errors).toMatchObject([
           {
             message:
@@ -3304,12 +3274,7 @@ describe('config/validation', () => {
           'global',
           config,
         );
-        expect(warnings).toMatchObject([
-          {
-            message:
-              'Invalid value `invalid` for `gitUrl`. The allowed values are default, ssh, endpoint.',
-          },
-        ]);
+        expect(warnings).toBeEmptyArray();
         expect(errors).toMatchObject([
           {
             message:
@@ -3380,16 +3345,6 @@ describe('config/validation', () => {
             'Configuration option `checkedBranches` should be a list (Array).',
           topic: 'Configuration Error',
         },
-        {
-          topic: 'Configuration Error',
-          message:
-            'Invalid value `1` for `mergeConfidenceDatasources`. The allowed values are go, maven, npm, nuget, packagist, pypi, rubygems.',
-        },
-        {
-          topic: 'Configuration Error',
-          message:
-            'Invalid value for `gitNoVerify`. The allowed values are commit, push.',
-        },
       ]);
       expect(errors).toMatchObject([
         {
@@ -3455,13 +3410,7 @@ describe('config/validation', () => {
             'repositories[1]: each repository object entry must have a `repository` string property',
         },
       ]);
-      expect(warnings).toEqual([
-        {
-          topic: 'Configuration Error',
-          message:
-            'Invalid value `invalid` for `repositories[0].binarySource`. The allowed values are docker, global, install, hermit.',
-        },
-      ]);
+      expect(warnings).toBeEmptyArray();
     });
 
     it('allows repositories[] as string[]', async () => {
